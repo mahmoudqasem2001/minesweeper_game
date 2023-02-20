@@ -1,10 +1,6 @@
-// ignore_for_file: implementation_imports
-
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:minisweeper_game/bomb.dart';
 import 'package:minisweeper_game/number_box.dart';
 
@@ -16,39 +12,59 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Color themeColor = Colors.blue.shade100;
-  Color releavedBoxColor = Colors.green.shade100;
-  var timer = 0;
-  bool isBegin = true;
+  //------ Gradient Colors--------//
+  final Shader gradText = const LinearGradient(
+    colors: <Color>[Colors.purple, Colors.red],
+  ).createShader(const Rect.fromLTWH(0.0, 0.0, 170.0, 80.0));
 
   // grid variable
   int numberOfSquares = 12 * 9;
   int numberInEachRow = 9;
   int numberOfBombs = 15;
+
   // [number of bombs around , revealed = true / false]
   var squareStatus = [];
 
-  void gameTimer(bool stop) {
-    if (isBegin == true) {
-      Timer.periodic(Duration(seconds: 1), (Timer) {
-        if (timer < 200) {
-          setState(() {
-            timer++;
-          });
-        }
-      });
-    }
-    if (stop == true) {
-      timer = 0;
-    }
-    isBegin = false;
-  }
-
 // bomb location
   final List<int> bombLocation = [];
-
   bool bombsRevealed = false;
 
+//-------------- Timer Module---------------
+  int _timeElapsed = 0;
+  bool _isRunning = false;
+  late Timer _timer;
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    if (_isRunning == false) {
+      _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+        setState(() {
+          _timeElapsed++;
+        });
+      });
+      _isRunning = true;
+    }
+  }
+
+  void _stopTimer() {
+    _timer.cancel();
+  }
+
+  void _resetTimer() {
+    if (_timer != null) {
+      _timer.cancel();
+    }
+    setState(() {
+      _timeElapsed = 0;
+    });
+  }
+
+  //------------end timer module------------//
   void randomBombs() {
     for (var i = 0; i < numberOfBombs; i++) {
       bombLocation.add(Random().nextInt(numberOfSquares));
@@ -58,7 +74,6 @@ class _HomePageState extends State<HomePage> {
   void restartGame() {
     setState(() {
       //clear all past data
-      gameTimer(true);
       bombsRevealed = false;
       squareStatus.clear();
       bombLocation.clear();
@@ -69,6 +84,8 @@ class _HomePageState extends State<HomePage> {
       randomBombs();
       scanBombs();
     });
+    _resetTimer();
+    _isRunning = false;
   }
 
   @override
@@ -251,64 +268,98 @@ class _HomePageState extends State<HomePage> {
   }
 
   void playerLost() {
-    gameTimer(true);
     showDialog(
         context: context,
         builder: ((context) {
           return AlertDialog(
-            backgroundColor: releavedBoxColor,
-            title: Center(
+            backgroundColor: Colors.blue.shade200,
+            title: const Center(
               child: Text(
                 'YOU LOST!',
-                style: TextStyle(
-                  color: Colors.black,
-                ),
+                style:
+                    TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
               ),
             ),
             actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 88.0),
-                child: MaterialButton(
-                  onPressed: () {
-                    restartGame();
-                    Navigator.pop(context);
-                  },
-                  child: Icon(Icons.refresh),
-                  color: Colors.white,
-                ),
-              )
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'YOUR TIME : $_timeElapsed',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                    ),
+                  ),
+                  MaterialButton(
+                    onPressed: () {
+                      restartGame();
+                      _resetTimer();
+                      _isRunning = false;
+                      Navigator.pop(context);
+                    },
+                    color: Colors.green.shade200,
+                    child: const Icon(
+                      Icons.refresh,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ],
           );
         }));
   }
 
   void playerWon() {
-    gameTimer(true);
     showDialog(
         context: context,
         builder: ((context) {
           return AlertDialog(
-            backgroundColor: releavedBoxColor,
+            backgroundColor: Colors.blue.shade200,
             title: Center(
-              child: Text(
-                'YOU WON',
-                style: TextStyle(
-                  color: Colors.white,
-                ),
+              child: Column(
+                children: const [
+                  Text(
+                    'YOU WON',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Icon(
+                    Icons.sentiment_very_satisfied_outlined,
+                    color: Colors.green,
+                  )
+                ],
               ),
             ),
             actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 88.0),
-                child: MaterialButton(
-                  onPressed: () {
-                    restartGame();
-                    Navigator.pop(context);
-                  },
-                  child: Icon(Icons.refresh),
-                  color: Colors.white,
-                ),
-              )
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'YOUR TIME : $_timeElapsed',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                    ),
+                  ),
+                  MaterialButton(
+                    onPressed: () {
+                      restartGame();
+                      _resetTimer();
+                      _isRunning = false;
+                      Navigator.pop(context);
+                    },
+                    color: Colors.green.shade200,
+                    child: const Icon(
+                      Icons.refresh,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ],
           );
         }));
@@ -325,126 +376,112 @@ class _HomePageState extends State<HomePage> {
     //if this number is the same as the number of bombs, then player wins!
     if (unrevealedBoxes == bombLocation.length) {
       playerWon();
+      _stopTimer();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: themeColor,
-      body: Padding(
-        padding: const EdgeInsets.only(top: 30),
-        child: Column(
-          children: [
-            //game state and menu
-            Container(
-              padding: EdgeInsets.only(
-                top: 20,
-                bottom: 40,
-              ),
-              height: 170,
-              decoration: BoxDecoration(
-                border: Border(
-                  top:
-                      BorderSide(width: 16.0, color: Colors.lightBlue.shade900),
-                  bottom:
-                      BorderSide(width: 16.0, color: Colors.lightBlue.shade900),
-                  right:
-                      BorderSide(width: 16.0, color: Colors.lightBlue.shade900),
-                  left:
-                      BorderSide(width: 16.0, color: Colors.lightBlue.shade900),
+      backgroundColor: Colors.blue.shade100,
+      body: Column(
+        children: [
+          //game state and menu
+          Container(
+            padding: const EdgeInsets.only(
+              top: 20,
+              bottom: 20,
+            ),
+            height: 140,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // display number of bombs
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      bombLocation.length.toString(),
+                      style: const TextStyle(
+                        fontSize: 30,
+                      ),
+                    ),
+                    const Text('B O M B'),
+                  ],
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // display number of bombs
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        bombLocation.length.toString(),
-                        style: TextStyle(
-                          fontSize: 40,
-                        ),
-                      ),
-                      Text('B O M B'),
-                    ],
-                  ),
 
-                  //button  to refresh the game
-                  GestureDetector(
-                    onTap: restartGame,
-                    child: Card(
-                      child: Icon(
-                        Icons.refresh,
-                        color: Colors.white,
-                        size: 40,
-                      ),
-                      color: Colors.green[600],
+                //button  to refresh the game
+                GestureDetector(
+                  onTap: restartGame,
+                  child: Card(
+                    color: Colors.green[400],
+                    child: const Icon(
+                      Icons.refresh,
+                      color: Colors.white,
+                      size: 40,
                     ),
                   ),
+                ),
 
-                  //display time taken
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        timer.toString(),
-                        style: TextStyle(
-                          fontSize: 40,
-                        ),
+                //display time taken
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _timeElapsed.toString(),
+                      style: const TextStyle(
+                        fontSize: 30,
                       ),
-                      Text('T I M E'),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                    const Text('T I M E'),
+                  ],
+                ),
+              ],
             ),
-            //grid
+          ),
+          //grid
 
-            Expanded(
-              child: GridView.builder(
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: numberOfSquares,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: numberInEachRow),
-                  itemBuilder: (context, index) {
-                    if (bombLocation.contains(index)) {
-                      return MyBomb(
-                        revealed: bombsRevealed,
-                        function: () {
-                          gameTimer(true);
-                          setState(() {
-                            bombsRevealed = true;
-                          });
-                          playerLost();
-                          //player tapped the bomb , so player loses
-                        },
-                      );
-                    } else {
-                      return MyNumberBox(
-                        child: squareStatus[index][0],
-                        revealed: squareStatus[index][1],
-                        function: () {
-                          gameTimer(false);
-                          //reveal current box
-                          revealBoxNumbers(index);
-                          checkWinner();
-                        },
-                      );
-                    }
-                  }),
-            ),
+          Expanded(
+            child: GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: numberOfSquares,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: numberInEachRow),
+                itemBuilder: (context, index) {
+                  if (bombLocation.contains(index)) {
+                    return MyBomb(
+                      revealed: bombsRevealed,
+                      function: () {
+                        setState(() {
+                          bombsRevealed = true;
+                        });
+                        playerLost();
+                        //player tapped the bomb , so player loses
+                        _stopTimer();
+                      },
+                    );
+                  } else {
+                    return MyNumberBox(
+                      child: squareStatus[index][0],
+                      revealed: squareStatus[index][1],
+                      function: () {
+                        //reveal current box
+                        revealBoxNumbers(index);
+                        checkWinner();
+                        _startTimer();
+                      },
+                    );
+                  }
+                }),
+          ),
 
-            //branding
+          //branding
 
-            Padding(
-              padding: const EdgeInsets.only(bottom: 40.0),
-              child: Text('C R E A T E D      B Y      M A H M O U D-K H '),
-            )
-          ],
-        ),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 15),
+            child: Text('C R E A T E D      B Y     ENG . M A H M O U D '),
+          ),
+        ],
       ),
     );
   }

@@ -1,12 +1,12 @@
+// ignore_for_file: prefer_typing_uninitialized_variables, must_be_immutable
+
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 
 class MyNumberBox extends StatelessWidget {
   final child;
   bool revealed;
   final function;
-  MyNumberBox({this.child, required this.revealed, this.function});
+  MyNumberBox({super.key, this.child, required this.revealed, this.function});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +15,7 @@ class MyNumberBox extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(1.0),
         child: Container(
-          color: revealed ? Colors.green.shade200 : Colors.blue.shade500,
+          color: revealed ? Colors.green.shade200 : Colors.blueGrey,
           child: Center(
             child: Text(
               revealed ? ( child == 0 ?  '' :child.toString()) : '',

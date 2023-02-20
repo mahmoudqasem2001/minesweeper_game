@@ -1,6 +1,6 @@
-// ignore_for_file: prefer_const_constructors
 
 import 'package:flutter/material.dart';
+import 'package:minisweeper_game/intoduction_screen.dart';
 
 import 'home_page.dart';
 
@@ -13,9 +13,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      home: IntroductionScrren(),
     );
   }
 }
