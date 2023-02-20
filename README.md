@@ -12,7 +12,7 @@ How to Play:
 -The game is won when all mines are marked, and all other cells are revealed.
 
 UI:
-![Example of UI at playing time](https://i.imgur.com/4ubJoAJ.jpg)
+![Example of UI at playing time](https://i.imgur.com/XCyPdGY.png)
 
 
 Contributions
